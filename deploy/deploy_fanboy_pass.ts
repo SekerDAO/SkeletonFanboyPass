@@ -6,7 +6,7 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await getNamedAccounts();
   const { deploy } = deployments;
 
-  await deploy("ClearanceCard001", {
+  await deploy("FanboyPass", {
     from: deployer,
     args: [],
     log: true,
@@ -14,5 +14,5 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   });
 };
 
-deploy.tags = ["clearance-card-001"];
+deploy.tags = ["fanboy-pass"];
 export default deploy;
