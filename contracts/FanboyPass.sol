@@ -62,7 +62,7 @@ contract FanboyPass is ERC721URIStorage, Ownable {
                         bytes(
                             abi.encodePacked(
                                 '{"name":"Skeleton Steph - Fanboy Pass",',
-                                '"description":"Locks in your minting spot for the exclusive Skeleton Steph Genesis Mini-Series, which goes live Oct. 14th",',
+                                '"description":"Locks in your minting spot for the exclusive Skeleton Steph Genesis Mini-Series, which goes live Oct. 15th",',
                                 '"attributes": ',
                                 "[",
                                 '{"trait_type":"Fanboy Number","value":"',
