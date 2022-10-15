@@ -13,8 +13,9 @@ contract SkeletonStephGenesis is ERC721URIStorage, Ownable {
     using Strings for uint256;
     Counters.Counter private _tokenIds;
     uint256 public totalMint = 2100;
-    uint256 public stephReserve = 100;
-    uint256 public price = 0.075 ether;
+    uint256 public stephReserve = 30;
+    uint256 public price = 0.076 ether;
+    bool public isPresale = true;
 
     // struct Allowlist {
     //     uint256 claimed;
@@ -30,9 +31,12 @@ contract SkeletonStephGenesis is ERC721URIStorage, Ownable {
 
     function allowlistMint(uint256 _amount, uint256[] memory _ids) public payable {
         // require(_amount <= 5, "can only mint a max of 5 per account");
-        require(IERC721(FanboyPass).balanceOf(msg.sender) >= _ids.length, "minter does not own enough FanboyPasses");
+        require(isPresale, "presale has ended");
+        require(_amount == _ids.length, "amount and number of ids missmatch");
+        // require(IERC721(FanboyPass).balanceOf(msg.sender) >= _ids.length, "minter does not own enough FanboyPasses");
         for (uint256 i; i <= _ids.length; i++) {
             require(IERC721(FanboyPass).ownerOf(_ids[i]) == msg.sender, "minter does not own an id");
+            require(claimed[_ids[i]] == false, "id has already been claimed");
             claimed[_ids[i]] = true;
         }
         require(msg.value == price * _amount, "Incorrect eth amount");
@@ -44,6 +48,7 @@ contract SkeletonStephGenesis is ERC721URIStorage, Ownable {
     }
 
     function mint(uint256 _amount) public payable {
+        require(!isPresale, "public mint has not begun");
         require(
             (Counters.current(_tokenIds) + _amount) <= totalMint,
             "minting has reached its max"
@@ -68,6 +73,10 @@ contract SkeletonStephGenesis is ERC721URIStorage, Ownable {
             _tokenIds.increment();
             stephReserve--;
         }
+    }
+
+    function startPublicMint() public onlyOwner {
+        isPresale = false;
     }
 
     function updateTokenURI(string memory _newURI) public onlyOwner {
