@@ -13,16 +13,11 @@ contract SkeletonStephGenesis is ERC721URIStorage, Ownable {
     using Strings for uint256;
     Counters.Counter private _tokenIds;
     uint256 public totalMint = 2100;
-    uint256 public stephReserve = 30;
+    uint256 public stephReserve = 37;
     uint256 public price = 0.076 ether;
     bool public isPresale = true;
-
-    // struct Allowlist {
-    //     uint256 claimed;
-    //     address claimer;
-    // }
-
-    string public IMGURL = "https://sekerfactory.mypinata.cloud/ipfs/Qmdv289QGShGexdyhHPocBSSVRffjM4Kqdyr15FZXLv4ws/";
+    bool public canUpdateMetadata = true;
+    string public IMGURL = "https://sekerfactory.mypinata.cloud/ipfs/QmdgRZWEa16Vr23gkWvGJDVMFDRiKxifPxhRwuzbqRqrWe/";
     address public FanboyPass = address(0xA8b3751b8fBBeF9EFefaeded0B920179E104fd65);
 
     mapping(uint256 => bool) public claimed;
@@ -30,17 +25,16 @@ contract SkeletonStephGenesis is ERC721URIStorage, Ownable {
     constructor() ERC721("Skeleton Steph Genesis Series", "Steph Genesis") {}
 
     function allowlistMint(uint256 _amount, uint256[] memory _ids) public payable {
-        // require(_amount <= 5, "can only mint a max of 5 per account");
         require(isPresale, "presale has ended");
-        require(_amount == _ids.length, "amount and number of ids missmatch");
+        require(_amount == _ids.length, "mint amount and number of IDs mismatch");
         // require(IERC721(FanboyPass).balanceOf(msg.sender) >= _ids.length, "minter does not own enough FanboyPasses");
-        for (uint256 i; i <= _ids.length; i++) {
+        for (uint256 i; i < _ids.length; i++) {
             require(IERC721(FanboyPass).ownerOf(_ids[i]) == msg.sender, "minter does not own an id");
             require(claimed[_ids[i]] == false, "id has already been claimed");
             claimed[_ids[i]] = true;
         }
-        require(msg.value == price * _amount, "Incorrect eth amount");
-        for (uint256 i; i <= _amount - 1; i++) {
+        require(msg.value == price * _amount, "incorrect eth amount");
+        for (uint256 i; i < _amount; i++) {
             uint256 newNFT = _tokenIds.current();
             _safeMint(msg.sender, newNFT);
             _tokenIds.increment();
@@ -54,19 +48,21 @@ contract SkeletonStephGenesis is ERC721URIStorage, Ownable {
             "minting has reached its max"
         );
         require(msg.value == price * _amount, "Incorrect eth amount");
-        for (uint256 i; i <= _amount - 1; i++) {
+        for (uint256 i; i < _amount; i++) {
             uint256 newNFT = _tokenIds.current();
             _safeMint(msg.sender, newNFT);
             _tokenIds.increment();
         }
     }
 
+    // Owner functions
+
     function mintSteph(uint256 _amount) public onlyOwner {
         require(
             (Counters.current(_tokenIds) + _amount) <= totalMint,
             "minting has reached its max"
         );
-        for (uint256 i; i <= _amount - 1; i++) {
+        for (uint256 i; i < _amount; i++) {
             require(stephReserve > 0, "steph reserve fully minted");
             uint256 newNFT = _tokenIds.current();
             _safeMint(msg.sender, newNFT);
@@ -79,7 +75,12 @@ contract SkeletonStephGenesis is ERC721URIStorage, Ownable {
         isPresale = false;
     }
 
+    function setFanboyPassAddress(address _newAddress) public onlyOwner {
+        FanboyPass = _newAddress;
+    }
+
     function updateTokenURI(string memory _newURI) public onlyOwner {
+        require(canUpdateMetadata, "metadata updates have been burned");
         IMGURL = _newURI;
     }
 
@@ -91,6 +92,12 @@ contract SkeletonStephGenesis is ERC721URIStorage, Ownable {
     function updatePrice(uint256 _newPrice) public onlyOwner {
         price = _newPrice;
     }
+
+    function burnMetadataUpdate() public onlyOwner {
+        canUpdateMetadata = false;
+    }
+
+    // Utility functions
 
     function tokenURI(uint256 tokenId)
         public
@@ -116,8 +123,8 @@ contract SkeletonStephGenesis is ERC721URIStorage, Ownable {
         onlyOwner
     {
         require(
-            withdrawAddress != address(0),
-            "Withdraw address cannot be zero"
+            withdrawAddress == owner(),
+            "can only withdraw to the owner"
         );
         require(address(this).balance >= 0, "Not enough eth");
         (bool sent, ) = withdrawAddress.call{value: address(this).balance}("");
